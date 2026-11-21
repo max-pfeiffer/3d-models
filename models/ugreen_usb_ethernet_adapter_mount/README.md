@@ -27,6 +27,17 @@ Nothing sits in front of RJ45 port.
   - at the cable: diameter 8 mm
 - Cable diameter: 4 mm
 
+### UGREEN adapter – operating temperature
+UGREEN publishes no operating temperature for this adapter (not on the product listing, and the
+[ServeTheHome review](https://servethehome.com/ugreen-usb-a-to-rj45-2-5gbe-adapter-review) gives none either).
+- Chip: Realtek RTL8156BG ([ServeTheHome](https://servethehome.com/ugreen-usb-a-to-rj45-2-5gbe-adapter-review)),
+  about 1–2 W power draw for 2.5GbE.
+- Comparable adapter with the same chip, Cudy UE25A: operating temperature 0–40 °C ambient, storage −40–75 °C
+  ([datasheet](https://cudy.com/cdn/shop/files/UE25A_1.0_Datasheet.pdf)). j5create JCE145 (2.5G USB-C): 0–40 °C
+  ([specifications](https://en.j5create.com/pages/jce145-specifications)).
+- So assume **0–40 °C ambient** air around the adapter. The casing itself runs warmer than the ambient air;
+  its temperature under load has not been measured.
+
 ### DeskPi SBC Shell – 2.5" HDD mounting holes (M3)
 Standard 2.5" drive bottom mounting pattern (SFF-8201), matches the caliper photos:
 - Hole spacing across: 61.72 mm (center to center)
@@ -35,7 +46,12 @@ Standard 2.5" drive bottom mounting pattern (SFF-8201), matches the caliper phot
 
 ## Design
 
-- Open-top channel (26.9 x 16.4 mm inside), the tray closes the top. Total height 18.4 mm.
+- Channel 26.9 x 16.4 mm inside, total height 21.4 mm.
+- Seven 3 mm tall cross ribs on top keep the aluminium adapter off the steel tray (no metal on metal)
+  and leave a 3 mm air gap above the adapter. The ribs print as bridges (no supports).
+- Ventilation, because the adapter gets hot: slots in the floor let cool air in from below, open notches
+  in both side walls between the ribs let warm air out sideways from the gap above the adapter.
+  The adapter only touches plastic: floor strips, the lower 4 mm of the side walls, wall posts and ribs.
 - Four ears on the HDD hole pattern with captive M3 nuts. The nut is pushed in from below through a hex channel;
   the M3 x 10 screw goes from above through the tray and pulls the nut up against the channel ceiling.
   5.1 mm of plastic between tray and nut, assuming a 1.5 mm tray (`TRAY_THICKNESS` in `model.py`).
@@ -47,7 +63,8 @@ Standard 2.5" drive bottom mounting pattern (SFF-8201), matches the caliper phot
 ## Printing
 
 - Orientation: as modeled (floor on the bed), no supports.
-- Material: PETG preferred (the clip tongue flexes better), PLA works.
+- Material: PETG (or ASA). Not PLA: it softens around 55 °C, too close to the adapter's operating temperature.
+  PETG also flexes better for the clip tongue.
 - 0.2 mm layers, 3 perimeters, 20 % infill.
 
 ## Hardware

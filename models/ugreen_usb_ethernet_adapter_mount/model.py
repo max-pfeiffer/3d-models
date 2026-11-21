@@ -1,12 +1,15 @@
 """Mount for a UGREEN 2.5G USB ethernet adapter under a DeskPi SBC Shell 10" 1U rack tray.
 
-Open-top channel screwed to the 2.5" HDD holes of the tray; the tray closes the top.
+Channel screwed to the 2.5" HDD holes of the tray. Cross ribs on top (printed as bridges) keep the
+aluminium adapter off the steel tray and leave an air gap above it. The adapter gets hot, so the
+floor and side walls are vented: cool air enters through the floor, warm air leaves sideways
+through the wall vents between the ribs.
 M3 screws go from above through the tray into captive nuts in the mount's ears.
 The adapter slides in from the back (cable first) until its strain relief hits the front stop,
 then a flexible tongue in the floor snaps in behind the RJ45 face.
 
 Coordinates (as installed and as printed): X across the rack, -Y front, +Y back, Z up towards
-the tray. Z = 0 is the floor underside, the top of the part touches the tray.
+the tray. Z = 0 is the floor underside, the top of the part (ribs and ears) touches the tray.
 """
 
 from build123d import (
@@ -50,7 +53,17 @@ WALL = 2.4
 CAVITY_WIDTH = ADAPTER_WIDTH + 2 * CLEARANCE_SLIDING
 CAVITY_HEIGHT = ADAPTER_HEIGHT + 2 * CLEARANCE_SLIDING
 OUTER_WIDTH = CAVITY_WIDTH + 2 * WALL
-HEIGHT = FLOOR + CAVITY_HEIGHT
+
+# Ventilation
+RIB_HEIGHT = 3.0  # spacer ribs between adapter and tray = air gap above the adapter
+RIB_WIDTH = 3.0
+RIB_PITCH = 12.0  # approximate, ribs are spread evenly from the front stop to the back end
+WALL_BAND = 4.0  # solid wall above the floor; vents above it reach up to the tray
+VENT_POST = 5.0  # wall post under each rib
+FLOOR_VENT_WIDTH = 4.0
+FLOOR_VENT_EDGE = 4.0  # floor kept solid along both walls
+
+HEIGHT = FLOOR + CAVITY_HEIGHT + RIB_HEIGHT
 
 # Screw ears: M3 x 10 from above through the tray into a captive nut.
 # The nut is inserted from below through a hex channel; the screw pulls it up against the channel ceiling.
@@ -98,8 +111,48 @@ def _channel(y_min: float, y_max: float) -> Part:
     length = y_max - y_min
     y = (y_min + y_max) / 2
     outer = Pos(0, y, 0) * Box(OUTER_WIDTH, length, HEIGHT, align=BOTTOM)
-    cavity = Pos(0, y, FLOOR) * Box(CAVITY_WIDTH, length + 2, CAVITY_HEIGHT + 1, align=BOTTOM)
+    cavity = Pos(0, y, FLOOR) * Box(CAVITY_WIDTH, length + 2, CAVITY_HEIGHT + RIB_HEIGHT + 1, align=BOTTOM)
     return outer - cavity
+
+
+def _rib_positions() -> list[float]:
+    first = STOP_Y + RIB_WIDTH / 2
+    last = BACK_Y - RIB_WIDTH / 2
+    count = round((last - first) / RIB_PITCH) + 1
+    return [first + i * (last - first) / (count - 1) for i in range(count)]
+
+
+def _gap_centers() -> list[float]:
+    ribs = _rib_positions()
+    return [(a + b) / 2 for a, b in zip(ribs, ribs[1:])]
+
+
+def _rib(y: float) -> Part:
+    return Pos(0, y, FLOOR + CAVITY_HEIGHT) * Box(OUTER_WIDTH, RIB_WIDTH, RIB_HEIGHT, align=BOTTOM)
+
+
+def _wall_vents() -> Part:
+    # Open-top notches between the ribs, so they print without bridges.
+    # Skipped where an ear joins the wall.
+    pitch = _rib_positions()[1] - _rib_positions()[0]
+    width = pitch - VENT_POST
+    vents = Part()
+    for y in _gap_centers():
+        if abs(y) + width / 2 > HOLE_ALONG / 2 - EAR_RADIUS:
+            continue
+        vents += Pos(0, y, FLOOR + WALL_BAND) * Box(OUTER_WIDTH + 2, width, HEIGHT, align=BOTTOM)
+    return vents
+
+
+def _floor_vents() -> Part:
+    tongue_start = BACK_Y - TONGUE_LENGTH - TONGUE_GAP
+    length = CAVITY_WIDTH - 2 * FLOOR_VENT_EDGE
+    vents = Part()
+    for y in _gap_centers():
+        if y + FLOOR_VENT_WIDTH / 2 > tongue_start:
+            continue
+        vents += Pos(0, y, -1) * Box(length, FLOOR_VENT_WIDTH, FLOOR + 2, align=BOTTOM)
+    return vents
 
 
 def _ears(y: float) -> Part:
@@ -150,18 +203,20 @@ def _catch() -> Part:
 
 
 def build() -> Part:
-    part = _channel(FRONT_Y, BACK_Y)
+    part = _channel(FRONT_Y, BACK_Y) - _wall_vents()
     part += _ears(-HOLE_ALONG / 2) + _ears(HOLE_ALONG / 2)
     part += _front_stop()
-    part -= _tongue_slots()
+    for y in _rib_positions():
+        part += _rib(y)
+    part -= _tongue_slots() + _floor_vents()
     part += _catch()
     return chamfer(part.edges().group_by(Axis.Z)[0], ELEPHANT_FOOT_CHAMFER)
 
 
 def build_fit_test() -> Part:
-    """Channel cross-section and the across hole spacing, to check the fit before the full print."""
+    """Channel cross-section, one rib bridge and the across hole spacing, to check the fit before the full print."""
     half = FIT_TEST_LENGTH / 2
-    part = _channel(-half, half) + _ears(0)
+    part = _channel(-half, half) + _rib(0) + _ears(0)
     return chamfer(part.edges().group_by(Axis.Z)[0], ELEPHANT_FOOT_CHAMFER)
 
 
