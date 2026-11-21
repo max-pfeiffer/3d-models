@@ -1,9 +1,10 @@
 """Build a model: export STEP + STL, render preview images and run print checks.
 
 Usage:
-    uv run scripts/build.py models/<name> [--open]
+    uv run scripts/build.py models/<name> [--open] [--part fit_test]
 
 Each model directory contains a model.py with a `build()` function returning a Part.
+Optional variants are `build_<part>()` functions, built with --part <part>.
 Outputs go to out/<name>/:
     <name>.step       -> import into PrusaSlicer (true curves)
     <name>.stl        -> mesh fallback
@@ -39,11 +40,11 @@ VIEWS = [
 ]
 
 
-def load_model(model_dir: Path):
+def load_model(model_dir: Path, part: str | None):
     spec = importlib.util.spec_from_file_location(f"models.{model_dir.name}", model_dir / "model.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.build()
+    return getattr(module, f"build_{part}" if part else "build")()
 
 
 def render_views(mesh: trimesh.Trimesh, title: str, path: Path):
@@ -112,14 +113,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("model_dir", type=Path)
     parser.add_argument("--open", action="store_true", help="open the STEP file in PrusaSlicer")
+    parser.add_argument("--part", help="build variant: calls build_<PART>() instead of build()")
     args = parser.parse_args()
 
     model_dir = args.model_dir.resolve()
-    name = model_dir.name
-    out_dir = ROOT / "out" / name
+    out_dir = ROOT / "out" / model_dir.name
+    name = f"{model_dir.name}_{args.part}" if args.part else model_dir.name
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    part = load_model(model_dir)
+    part = load_model(model_dir, args.part)
 
     step_path = out_dir / f"{name}.step"
     stl_path = out_dir / f"{name}.stl"

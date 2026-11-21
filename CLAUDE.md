@@ -13,7 +13,7 @@ Parametric 3D models written in Python with [build123d](https://build123d.readth
 
 ## Workflow
 
-1. Build: `uv run scripts/build.py models/<name>` (add `--open` to open the STEP in PrusaSlicer).
+1. Build: `uv run scripts/build.py models/<name>` (add `--open` to open the STEP in PrusaSlicer). Variants such as fit tests are extra `build_<part>()` functions in `model.py`, built with `--part <part>`.
 2. **Always** read `out/<name>/<name>_views.png` after a build and check the geometry visually (iso, front, right, top views).
 3. Check the printed stats (size, volume) against the intended dimensions. A non-zero exit means a PROBLEM line was printed — fix it.
 4. Build models incrementally: base shape first, then one feature at a time, building and checking the renders after each step.

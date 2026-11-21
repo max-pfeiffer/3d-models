@@ -28,3 +28,14 @@ SCREW_CLEARANCE = {
     "M4": 4.5,
     "M5": 5.5,
 }
+
+# Hex nuts (ISO 4032): (across flats, thickness).
+NUT_SIZE = {
+    "M2": (4.0, 1.6),
+    "M2.5": (5.0, 2.0),
+    "M3": (5.5, 2.4),
+    "M4": (7.0, 3.2),
+    "M5": (8.0, 4.7),
+}
+# Added to the nut size for a captive nut pocket (total, not per side).
+NUT_POCKET_CLEARANCE = 0.3
