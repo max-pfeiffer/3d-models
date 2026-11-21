@@ -1,0 +1,10 @@
+# Generated models and renders
+out/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# IDE
+.idea
