@@ -13,6 +13,8 @@ The holes of [DeskPi SBC Shell 10 inch 1U Rack](https://deskpi.com/products/desk
 So the mount has to include nuts. The screws should be 10 mm long.  
 The adapter should it slide in to an end stop and clip in place.
 Nothing sits in front of RJ45 port.
+The mount must only touch the [DeskPi SBC Shell 10 inch 1U Rack](https://deskpi.com/products/deskpi-accessories-sbc-shell)
+at the mount points. There muste be a space of 2 mm between the mount and the [DeskPi SBC Shell 10 inch 1U Rack](https://deskpi.com/products/deskpi-accessories-sbc-shell) anywhere else.
 
 ## Measurements
 
@@ -46,9 +48,10 @@ Standard 2.5" drive bottom mounting pattern (SFF-8201), matches the caliper phot
 
 ## Design
 
-- Channel 26.9 x 16.4 mm inside, total height 21.4 mm.
-- Seven 3 mm tall cross ribs on top keep the aluminium adapter off the steel tray (no metal on metal)
-  and leave a 3 mm air gap above the adapter. The ribs print as bridges (no supports).
+- Channel 26.9 x 16.4 mm inside. Body (channel, ribs, front stop, ear bars) 21.4 mm tall, screw bosses 23.4 mm.
+- Only the four round screw bosses touch the tray. Everything else keeps a 2 mm gap to it (`TRAY_GAP` in `model.py`).
+- Seven 3 mm tall cross ribs on top hold the adapter down in the channel and leave a 3 mm air gap above it
+  (plus the 2 mm gap to the tray above the ribs). The ribs print as bridges (no supports).
 - Ventilation, because the adapter gets hot: slots in the floor let cool air in from below, open notches
   in both side walls between the ribs let warm air out sideways from the gap above the adapter.
   The adapter only touches plastic: floor strips, the lower 4 mm of the side walls, wall posts and ribs.

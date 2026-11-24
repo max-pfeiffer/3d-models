@@ -9,7 +9,8 @@ The adapter slides in from the back (cable first) until its strain relief hits t
 then a flexible tongue in the floor snaps in behind the RJ45 face.
 
 Coordinates (as installed and as printed): X across the rack, -Y front, +Y back, Z up towards
-the tray. Z = 0 is the floor underside, the top of the part (ribs and ears) touches the tray.
+the tray. Z = 0 is the floor underside. Only the screw bosses touch the tray; everything else
+stays TRAY_GAP below it.
 """
 
 from build123d import (
@@ -63,7 +64,10 @@ VENT_POST = 5.0  # wall post under each rib
 FLOOR_VENT_WIDTH = 4.0
 FLOOR_VENT_EDGE = 4.0  # floor kept solid along both walls
 
-HEIGHT = FLOOR + CAVITY_HEIGHT + RIB_HEIGHT
+# Only the screw bosses touch the tray; the rest of the mount keeps this gap to it
+TRAY_GAP = 2.0
+BODY_HEIGHT = FLOOR + CAVITY_HEIGHT + RIB_HEIGHT  # channel, ribs, front stop, ear bars
+HEIGHT = BODY_HEIGHT + TRAY_GAP  # screw bosses, up to the tray
 
 # Screw ears: M3 x 10 from above through the tray into a captive nut.
 # The nut is inserted from below through a hex channel; the screw pulls it up against the channel ceiling.
@@ -110,7 +114,7 @@ assert NUT_POCKET_FLATS / 2 < EAR_RADIUS - 1.0, "nut channel breaks through the 
 def _channel(y_min: float, y_max: float) -> Part:
     length = y_max - y_min
     y = (y_min + y_max) / 2
-    outer = Pos(0, y, 0) * Box(OUTER_WIDTH, length, HEIGHT, align=BOTTOM)
+    outer = Pos(0, y, 0) * Box(OUTER_WIDTH, length, BODY_HEIGHT, align=BOTTOM)
     cavity = Pos(0, y, FLOOR) * Box(CAVITY_WIDTH, length + 2, CAVITY_HEIGHT + RIB_HEIGHT + 1, align=BOTTOM)
     return outer - cavity
 
@@ -156,13 +160,14 @@ def _floor_vents() -> Part:
 
 
 def _ears(y: float) -> Part:
-    # Straight bar from the wall to the hole, rounded only around the hole
+    # Straight bar from the wall to the hole, rounded only around the hole.
+    # The bar stays TRAY_GAP below the tray; only the round boss around the hole reaches it.
     x_inner = OUTER_WIDTH / 2 - WALL / 2
     width = HOLE_ACROSS / 2 - x_inner
     ears = Part()
     for side in (-1, 1):
         hole_pos = Pos(side * HOLE_ACROSS / 2, y, 0)
-        ear = Pos(side * (x_inner + width / 2), y, 0) * Box(width, 2 * EAR_RADIUS, HEIGHT, align=BOTTOM)
+        ear = Pos(side * (x_inner + width / 2), y, 0) * Box(width, 2 * EAR_RADIUS, BODY_HEIGHT, align=BOTTOM)
         ear += hole_pos * Cylinder(EAR_RADIUS, HEIGHT, align=BOTTOM)
         ear -= hole_pos * Cylinder(HOLE_DIAMETER / 2, HEIGHT, align=BOTTOM)
         nut_channel = extrude(RegularPolygon(NUT_POCKET_FLATS / 2, 6, major_radius=False), HEIGHT - EAR_TOP)
@@ -172,7 +177,7 @@ def _ears(y: float) -> Part:
 
 
 def _front_stop() -> Part:
-    wall = Pos(0, STOP_Y - FRONT_WALL / 2, 0) * Box(OUTER_WIDTH, FRONT_WALL, HEIGHT, align=BOTTOM)
+    wall = Pos(0, STOP_Y - FRONT_WALL / 2, 0) * Box(OUTER_WIDTH, FRONT_WALL, BODY_HEIGHT, align=BOTTOM)
     slot = Pos(0, STOP_Y - FRONT_WALL / 2, FLOOR + SLOT_BOTTOM) * Box(
         SLOT_WIDTH, FRONT_WALL + 2, HEIGHT, align=BOTTOM
     )
