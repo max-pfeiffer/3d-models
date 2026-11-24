@@ -4,7 +4,8 @@ Channel screwed to the 2.5" HDD holes of the tray. Cross ribs on top (printed as
 aluminium adapter off the steel tray and leave an air gap above it. The adapter gets hot, so the
 floor and side walls are vented: cool air enters through the floor, warm air leaves sideways
 through the wall vents between the ribs.
-M3 screws go from above through the tray into captive nuts in the mount's ears.
+M3 x 20 button head screws go from above through the tray and the screw bosses into nuts held in
+hex recesses at the bottom of the bosses.
 The adapter slides in from the back (cable first) until its strain relief hits the front stop,
 then a flexible tongue in the floor snaps in behind the RJ45 face.
 
@@ -12,6 +13,8 @@ Coordinates (as installed and as printed): X across the rack, -Y front, +Y back,
 the tray. Z = 0 is the floor underside. Only the screw bosses touch the tray; everything else
 stays TRAY_GAP below it.
 """
+
+import math
 
 from build123d import (
     Align,
@@ -28,6 +31,7 @@ from build123d import (
 )
 
 from cadlib.printer import (
+    MAX_OVERHANG_DEG,
     CLEARANCE_SLIDING,
     ELEPHANT_FOOT_CHAMFER,
     NUT_POCKET_CLEARANCE,
@@ -69,16 +73,28 @@ TRAY_GAP = 2.0
 BODY_HEIGHT = FLOOR + CAVITY_HEIGHT + RIB_HEIGHT  # channel, ribs, front stop, ear bars
 HEIGHT = BODY_HEIGHT + TRAY_GAP  # screw bosses, up to the tray
 
-# Screw ears: M3 x 10 from above through the tray into a captive nut.
-# The nut is inserted from below through a hex channel; the screw pulls it up against the channel ceiling.
-SCREW_LENGTH = 10.0
+# Screw ears: M3 x 20 button head (ISO 7380) from above through the tray and the boss into a nut.
+# The nut is pushed up from below into a hex recess, one nut deep, that keeps it from turning.
+# The screw pulls it up against the recess ceiling.
+SCREW_LENGTH = 20.0
 SCREW_PROTRUSION = 1.0  # screw tip sticking out below the nut
 EAR_RADIUS = 5.0
 HOLE_DIAMETER = SCREW_CLEARANCE["M3"]
 NUT_ACROSS_FLATS, NUT_THICKNESS = NUT_SIZE["M3"]
 NUT_POCKET_FLATS = NUT_ACROSS_FLATS + NUT_POCKET_CLEARANCE
+NUT_POCKET_HEIGHT = NUT_THICKNESS + NUT_POCKET_CLEARANCE
 # Material between tray and nut, so that the screw fully engages the nut
 EAR_TOP = SCREW_LENGTH - TRAY_THICKNESS - NUT_THICKNESS - SCREW_PROTRUSION
+
+# The ears only reach down to the nut recess. Their underside rises from the side wall
+# to the outer end of the boss at the steepest overhang that prints without supports.
+EAR_POCKET_Z = HEIGHT - EAR_TOP - NUT_POCKET_HEIGHT
+EAR_TIP_X = HOLE_ACROSS / 2 + EAR_RADIUS
+EAR_SLOPE = 1 / math.tan(math.radians(MAX_OVERHANG_DEG))  # underside rise per mm outwards
+NUT_POCKET_CORNER = NUT_POCKET_FLATS / math.sqrt(3)  # hex corner radius, corners point along X
+# Underside height at the outer end of the boss: the slope reaches the recess bottom at its outer corner,
+# so the recess walls are the full nut depth all around
+EAR_TIP_Z = EAR_POCKET_Z + (EAR_RADIUS - NUT_POCKET_CORNER) * EAR_SLOPE
 
 # Clip: tongue in the floor with a ramped catch behind the RJ45 face
 TONGUE_WIDTH = 8.0
@@ -108,6 +124,7 @@ BOTTOM = (Align.CENTER, Align.CENTER, Align.MIN)
 
 assert HEIGHT <= FREE_HEIGHT
 assert EAR_TOP >= 3.0, "too little material between tray and nut"
+assert EAR_POCKET_Z > 0, "screw too long: nut recess below the bed"
 assert NUT_POCKET_FLATS / 2 < EAR_RADIUS - 1.0, "nut channel breaks through the ear"
 
 
@@ -159,9 +176,24 @@ def _floor_vents() -> Part:
     return vents
 
 
+def _ear_underside_cut(side: int, y: float) -> Part:
+    # Everything below the sloped underside, outside of the side wall
+    x_bed = EAR_TIP_X - EAR_TIP_Z / EAR_SLOPE  # where the underside meets the bed
+    x_out = EAR_TIP_X + 1
+    profile = Polygon(
+        (x_bed - 1 / EAR_SLOPE, -1),
+        (x_out, -1),
+        (x_out, EAR_TIP_Z + EAR_SLOPE),
+        align=None,
+    )
+    cut = extrude(Plane.XZ * profile, EAR_RADIUS + 1, both=True)
+    return Pos(0, y, 0) * (cut if side > 0 else cut.mirror(Plane.YZ))
+
+
 def _ears(y: float) -> Part:
     # Straight bar from the wall to the hole, rounded only around the hole.
     # The bar stays TRAY_GAP below the tray; only the round boss around the hole reaches it.
+    # Below, the ear is cut away along a 45 degree slope up to the bottom of the nut recess.
     x_inner = OUTER_WIDTH / 2 - WALL / 2
     width = HOLE_ACROSS / 2 - x_inner
     ears = Part()
@@ -170,8 +202,10 @@ def _ears(y: float) -> Part:
         ear = Pos(side * (x_inner + width / 2), y, 0) * Box(width, 2 * EAR_RADIUS, BODY_HEIGHT, align=BOTTOM)
         ear += hole_pos * Cylinder(EAR_RADIUS, HEIGHT, align=BOTTOM)
         ear -= hole_pos * Cylinder(HOLE_DIAMETER / 2, HEIGHT, align=BOTTOM)
-        nut_channel = extrude(RegularPolygon(NUT_POCKET_FLATS / 2, 6, major_radius=False), HEIGHT - EAR_TOP)
-        ear -= hole_pos * nut_channel
+        # Hex nut recess, open towards the bed. Corners point along X (see NUT_POCKET_CORNER).
+        recess = extrude(RegularPolygon(NUT_POCKET_FLATS / 2, 6, major_radius=False), EAR_POCKET_Z + NUT_POCKET_HEIGHT + 1)
+        ear -= hole_pos * Pos(0, 0, -1) * recess
+        ear -= _ear_underside_cut(side, y)
         ears += ear
     return ears
 

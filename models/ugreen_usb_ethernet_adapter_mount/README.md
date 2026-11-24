@@ -10,7 +10,8 @@ can be slided into the mount from the back direction of [DeskPi SBC Shell 10 inc
 
 The ethernet port of the adapter should face to the back of the [DeskPi SBC Shell 10 inch 1U Rack](https://deskpi.com/products/deskpi-accessories-sbc-shell).
 The holes of [DeskPi SBC Shell 10 inch 1U Rack](https://deskpi.com/products/deskpi-accessories-sbc-shell) are not threaded.
-So the mount has to include nuts. The screws should be 10 mm long.  
+So the mount has to include nuts. The screws are M3 x 20 mm button head screws, the screw head sits above the tray.
+The channels for inserting the nuts must be only as long as it needs to be to hold the nuts.
 The adapter should it slide in to an end stop and clip in place.
 Nothing sits in front of RJ45 port.
 The mount must only touch the [DeskPi SBC Shell 10 inch 1U Rack](https://deskpi.com/products/deskpi-accessories-sbc-shell)
@@ -45,6 +46,7 @@ Standard 2.5" drive bottom mounting pattern (SFF-8201), matches the caliper phot
 - Hole spacing across: 61.72 mm (center to center)
 - Hole spacing along: 76.60 mm (center to center)
 - Free height below the tray: 25 mm
+- Material thinkness of DeskPi SBC Shell: 1.5 mm
 
 ## Design
 
@@ -55,9 +57,13 @@ Standard 2.5" drive bottom mounting pattern (SFF-8201), matches the caliper phot
 - Ventilation, because the adapter gets hot: slots in the floor let cool air in from below, open notches
   in both side walls between the ribs let warm air out sideways from the gap above the adapter.
   The adapter only touches plastic: floor strips, the lower 4 mm of the side walls, wall posts and ribs.
-- Four ears on the HDD hole pattern with captive M3 nuts. The nut is pushed in from below through a hex channel;
-  the M3 x 10 screw goes from above through the tray and pulls the nut up against the channel ceiling.
-  5.1 mm of plastic between tray and nut, assuming a 1.5 mm tray (`TRAY_THICKNESS` in `model.py`).
+- Four ears on the HDD hole pattern. The M3 x 20 button head screw goes from above through the tray and the boss
+  into a nut. The nut is pushed up from below into a hex recess at the bottom of the boss, only one nut deep
+  (2.7 mm), which keeps it from turning. The screw pulls the nut up against the recess ceiling (prints as a short
+  bridge). 15.1 mm of plastic between tray and nut, 1 mm of screw sticks out below the nut, assuming a 1.5 mm tray
+  (`TRAY_THICKNESS` in `model.py`). Only the 1.65 mm screw head sits above the tray.
+- The ears only reach as far down as the nut recess. From there the underside slopes down at 45° to the side wall,
+  so the ears print without supports.
 - Front stop: wall with a 20 mm U-slot for the cable. The strain relief stops against the slot sides.
   The stop position assumes a linear taper of the strain relief (`STOP_OFFSET` in `model.py`).
 - Clip: 8 mm wide tongue in the floor at the back with a ramped catch behind the RJ45 face.
@@ -72,7 +78,7 @@ Standard 2.5" drive bottom mounting pattern (SFF-8201), matches the caliper phot
 
 ## Hardware
 
-- 4x M3 x 10 mm screws
+- 4x M3 x 20 mm button head screws (ISO 7380)
 - 4x M3 hex nuts (ISO 4032, 5.5 mm across flats)
 
 ## Build
