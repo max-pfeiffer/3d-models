@@ -63,9 +63,10 @@ OUTER_WIDTH = CAVITY_WIDTH + 2 * WALL
 RIB_HEIGHT = 3.0  # spacer ribs between adapter and tray = air gap above the adapter
 RIB_WIDTH = 3.0
 RIB_PITCH = 12.0  # approximate, ribs are spread evenly from the front stop to the back end
+RIB_SAG = 0.5  # extra room under the ribs: the long bridges sag a bit on the first layer
 WALL_BAND = 4.0  # solid wall above the floor; vents above it reach up to the tray
 VENT_POST = 5.0  # wall post under each rib
-FLOOR_VENT_WIDTH = 4.0
+FLOOR_VENT_WIDTH = 8.0  # leaves cross bars of about RIB_PITCH - FLOOR_VENT_WIDTH
 FLOOR_VENT_EDGE = 4.0  # floor kept solid along both walls
 
 # Only the screw bosses touch the tray; the rest of the mount keeps this gap to it
@@ -79,6 +80,7 @@ HEIGHT = BODY_HEIGHT + TRAY_GAP  # screw bosses, up to the tray
 SCREW_LENGTH = 20.0
 SCREW_PROTRUSION = 1.0  # screw tip sticking out below the nut
 EAR_RADIUS = 5.0
+EAR_WEB = 4.0  # thickness of the arm between side wall and boss; the boss carries the screw load
 HOLE_DIAMETER = SCREW_CLEARANCE["M3"]
 NUT_ACROSS_FLATS, NUT_THICKNESS = NUT_SIZE["M3"]
 NUT_POCKET_FLATS = NUT_ACROSS_FLATS + NUT_POCKET_CLEARANCE
@@ -149,7 +151,7 @@ def _gap_centers() -> list[float]:
 
 
 def _rib(y: float) -> Part:
-    return Pos(0, y, FLOOR + CAVITY_HEIGHT) * Box(OUTER_WIDTH, RIB_WIDTH, RIB_HEIGHT, align=BOTTOM)
+    return Pos(0, y, FLOOR + CAVITY_HEIGHT + RIB_SAG) * Box(OUTER_WIDTH, RIB_WIDTH, RIB_HEIGHT - RIB_SAG, align=BOTTOM)
 
 
 def _wall_vents() -> Part:
@@ -173,6 +175,9 @@ def _floor_vents() -> Part:
         if y + FLOOR_VENT_WIDTH / 2 > tongue_start:
             continue
         vents += Pos(0, y, -1) * Box(length, FLOOR_VENT_WIDTH, FLOOR + 2, align=BOTTOM)
+    # In front of the front stop only the cable passes: open floor, side strips stay
+    front_end = STOP_Y - FRONT_WALL
+    vents += Pos(0, (FRONT_Y - 1 + front_end) / 2, -1) * Box(length, front_end - FRONT_Y + 1, FLOOR + 2, align=BOTTOM)
     return vents
 
 
@@ -191,7 +196,7 @@ def _ear_underside_cut(side: int, y: float) -> Part:
 
 
 def _ears(y: float) -> Part:
-    # Straight bar from the wall to the hole, rounded only around the hole.
+    # Thin arm (EAR_WEB) from the wall to the round boss around the hole.
     # The bar stays TRAY_GAP below the tray; only the round boss around the hole reaches it.
     # Below, the ear is cut away along a 45 degree slope up to the bottom of the nut recess.
     x_inner = OUTER_WIDTH / 2 - WALL / 2
@@ -199,7 +204,7 @@ def _ears(y: float) -> Part:
     ears = Part()
     for side in (-1, 1):
         hole_pos = Pos(side * HOLE_ACROSS / 2, y, 0)
-        ear = Pos(side * (x_inner + width / 2), y, 0) * Box(width, 2 * EAR_RADIUS, BODY_HEIGHT, align=BOTTOM)
+        ear = Pos(side * (x_inner + width / 2), y, 0) * Box(width, EAR_WEB, BODY_HEIGHT, align=BOTTOM)
         ear += hole_pos * Cylinder(EAR_RADIUS, HEIGHT, align=BOTTOM)
         ear -= hole_pos * Cylinder(HOLE_DIAMETER / 2, HEIGHT, align=BOTTOM)
         # Hex nut recess, open towards the bed. Corners point along X (see NUT_POCKET_CORNER).

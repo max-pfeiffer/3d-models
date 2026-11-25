@@ -53,8 +53,9 @@ Standard 2.5" drive bottom mounting pattern (SFF-8201), matches the caliper phot
 - Channel 26.9 x 16.4 mm inside. Body (channel, ribs, front stop, ear bars) 21.4 mm tall, screw bosses 23.4 mm.
 - Only the four round screw bosses touch the tray. Everything else keeps a 2 mm gap to it (`TRAY_GAP` in `model.py`).
 - Seven 3 mm tall cross ribs on top hold the adapter down in the channel and leave a 3 mm air gap above it
-  (plus the 2 mm gap to the tray above the ribs). The ribs print as bridges (no supports).
-- Ventilation, because the adapter gets hot: slots in the floor let cool air in from below, open notches
+  (plus the 2 mm gap to the tray above the ribs). The ribs print as 27 mm bridges (no supports); they start
+  0.5 mm above the adapter (`RIB_SAG`), so a slightly sagging first bridge layer doesn't press on it.
+- Ventilation, because the adapter gets hot: 8 mm slots in the floor let cool air in from below, open notches
   in both side walls between the ribs let warm air out sideways from the gap above the adapter.
   The adapter only touches plastic: floor strips, the lower 4 mm of the side walls, wall posts and ribs.
 - Four ears on the HDD hole pattern. The M3 x 20 button head screw goes from above through the tray and the boss
@@ -62,8 +63,10 @@ Standard 2.5" drive bottom mounting pattern (SFF-8201), matches the caliper phot
   (2.7 mm), which keeps it from turning. The screw pulls the nut up against the recess ceiling (prints as a short
   bridge). 15.1 mm of plastic between tray and nut, 1 mm of screw sticks out below the nut, assuming a 1.5 mm tray
   (`TRAY_THICKNESS` in `model.py`). Only the 1.65 mm screw head sits above the tray.
-- The ears only reach as far down as the nut recess. From there the underside slopes down at 45° to the side wall,
-  so the ears print without supports.
+- Each ear is a round boss (10 mm diameter) around the screw, connected to the side wall by a 4 mm thick arm
+  (`EAR_WEB`). The screw load goes straight through the boss; the arm only holds the boss in place.
+  Below the nut recess the underside slopes down at 45° to the side wall, so the ears print without supports.
+- In front of the front stop only the cable passes, so the floor there is open; the side strips remain.
 - Front stop: wall with a 20 mm U-slot for the cable. The strain relief stops against the slot sides.
   The stop position assumes a linear taper of the strain relief (`STOP_OFFSET` in `model.py`).
 - Clip: 8 mm wide tongue in the floor at the back with a ramped catch behind the RJ45 face.
@@ -72,8 +75,9 @@ Standard 2.5" drive bottom mounting pattern (SFF-8201), matches the caliper phot
 ## Printing
 
 - Orientation: as modeled (floor on the bed), no supports.
-- Material: PETG (or ASA). Not PLA: it softens around 55 °C, too close to the adapter's operating temperature.
-  PETG also flexes better for the clip tongue.
+- Material: PLA works if the adapter casing stays below about 45 °C. PLA softens around 55 °C; above 45 °C the
+  clip tongue and the floor strips under the adapter slowly deform. Check: run the adapter under full 2.5G load
+  for 30 minutes and measure the casing temperature. If it gets hotter, print in PETG (or ASA).
 - 0.2 mm layers, 3 perimeters, 20 % infill.
 
 ## Hardware
